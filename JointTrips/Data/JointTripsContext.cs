@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using JointTrips.Models;
 
 
-public class JointTripsContext : DbContext
+public class JointTripsContext : IdentityDbContext<ApplicationUser>
 {
     public JointTripsContext(DbContextOptions<JointTripsContext> options)
         : base(options)
@@ -10,7 +11,6 @@ public class JointTripsContext : DbContext
     }
 
     public DbSet<Trip> Trips { get; set; }
-    public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
