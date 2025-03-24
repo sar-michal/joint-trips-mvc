@@ -1,6 +1,20 @@
+using Microsoft.EntityFrameworkCore;
+using JointTrips.Models;
+using Microsoft.AspNetCore.Identity;
+
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Services.AddDbContext<JointTripsContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("JointTripsContext")));
 // Add services to the container.
+
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => 
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+    })
+    .AddEntityFrameworkStores<JointTripsContext>();
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
