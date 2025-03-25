@@ -9,11 +9,15 @@ builder.Services.AddDbContext<JointTripsContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("JointTripsContext")));
 // Add services to the container.
 
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => 
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => 
     {
-        options.SignIn.RequireConfirmedAccount = false;
+        options.Password.RequiredUniqueChars = 0;
+        options.Password.RequireUppercase = false;
+        options.Password.RequiredLength = 5;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequireLowercase = false;
     })
-    .AddEntityFrameworkStores<JointTripsContext>();
+    .AddEntityFrameworkStores<JointTripsContext>().AddDefaultTokenProviders();
 
 builder.Services.AddControllersWithViews();
 

@@ -37,7 +37,7 @@ public class Trip
     [StringLength(2000)]
     public string? Description { get; set; } // Data
 
-    public int OwnerId { get; set; }
-    public virtual User? Owner { get; set; }
-    public virtual ICollection<User> Participants { get; set; } = new List<User>();
+    public string OwnerId { get; set; } = string.Empty;
+    public virtual ApplicationUser? Owner { get; set; }
+    public virtual ICollection<ApplicationUser> Participants { get; set; } = new List<ApplicationUser>();
 }
