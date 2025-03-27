@@ -24,7 +24,10 @@ namespace JointTrips.Controllers
         // GET: Trips
         public async Task<IActionResult> Index()
         {
-            var jointTripsContext = _context.Trips.Include(t => t.Owner).Include(t => t.Participants);
+            var jointTripsContext = _context.Trips
+                .Include(t => t.Owner)
+                .Include(t => t.Participants)
+                .Where(t => t.StartDate > DateTime.Now);
             return View(await jointTripsContext.ToListAsync());
         }
 
@@ -277,6 +280,32 @@ namespace JointTrips.Controllers
 
             TempData["Message"] = "You have successfully unregistered from the trip.";
             return RedirectToAction(nameof(Details), new { id = trip.Id });
+        }
+        // GET: Trips/Participants/5
+        public async Task<IActionResult> Participants(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var trip = await _context.Trips
+                .Include(t => t.Owner)
+                .Include(t => t.Participants)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (trip == null)
+            {
+                return NotFound();
+            }
+
+            var currentUserId = _userManager.GetUserId(User);
+            if (trip.OwnerId != currentUserId)
+            {
+                return Forbid();
+            }
+
+            return View(trip);
         }
     }
 }

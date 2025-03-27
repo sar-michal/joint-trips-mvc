@@ -1,0 +1,35 @@
+﻿@model JointTrips.Models.Trip
+
+@{
+    ViewData["Title"] = "Trip Participants";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Participants for @Model.Title</h1>
+
+@if (Model.Participants.Any())
+{
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var participant in Model.Participants)
+            {
+                    <tr>
+                        <td>@participant.Name</td>
+                        <td>@participant.Email</td>
+                    </tr>
+            }
+            </tbody>
+        </table>
+}
+else
+{
+        <p>There are currently no participants.</p>
+}
+
+<a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Back to Details</a>
