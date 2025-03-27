@@ -1,4 +1,5 @@
-﻿@model JointTrips.Models.Trip
+﻿@using System.Security.Claims
+@model JointTrips.Models.Trip
 
 @{
     ViewData["Title"] = "Details";
@@ -6,17 +7,16 @@
 }
 
 <h1>Details</h1>
-
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info">
+        @TempData["Message"]
+    </div>
+}
 <div>
-    <h4>Trip</h4>
+    <h4>@Html.DisplayFor(model => model.Title)</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Title)
-        </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.StartDate)
         </dt>
@@ -42,16 +42,16 @@
             @Html.DisplayFor(model => model.Location)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Capacity)
+            Registered
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Capacity)
+            @Model.Participants.Count / @Model.Capacity
         </dd>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Owner)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Owner.Name)
+            @Html.DisplayFor(model => model.Owner.Name) (@Html.DisplayFor(model => model.Owner.Email))
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Description)
@@ -62,6 +62,48 @@
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
+    @{
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        bool isOwner = Model.OwnerId == currentUserId;
+        bool isRegistered = Model.Participants.Any(p => p.Id == currentUserId);
+    }
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        if (!isOwner)
+        {
+            if (isRegistered)
+            {
+                <form asp-action="Leave" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="submit" value="Leave Trip" class="btn btn-warning" />
+                </form>
+            }
+            else
+            {
+                if (Model.Participants.Count < Model.Capacity)
+                {
+                    <form asp-action="Join" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="submit" value="Join Trip" class="btn btn-primary" />
+                    </form>
+                }
+                else
+                {
+                    <p class="text-danger">This trip is full.</p>
+                }
+            }
+        }
+        else
+        {
+            <p>You are the owner of this trip.</p>
+        }
+    }
+    else
+    {
+        <p>Please <a asp-controller="Account" asp-action="Login">log in</a> to join or leave this trip.</p>
+    }
 </div>

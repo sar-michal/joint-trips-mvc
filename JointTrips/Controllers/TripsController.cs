@@ -24,7 +24,7 @@ namespace JointTrips.Controllers
         // GET: Trips
         public async Task<IActionResult> Index()
         {
-            var jointTripsContext = _context.Trips.Include(t => t.Owner);
+            var jointTripsContext = _context.Trips.Include(t => t.Owner).Include(t => t.Participants);
             return View(await jointTripsContext.ToListAsync());
         }
 
@@ -38,6 +38,7 @@ namespace JointTrips.Controllers
 
             var trip = await _context.Trips
                 .Include(t => t.Owner)
+                .Include(t => t.Participants)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (trip == null)
             {
@@ -50,6 +51,11 @@ namespace JointTrips.Controllers
         // GET: Trips/Create
         public IActionResult Create()
         {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
             return View();
         }
 
@@ -195,6 +201,82 @@ namespace JointTrips.Controllers
         private bool TripExists(int id)
         {
             return _context.Trips.Any(e => e.Id == id);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> join(int id)
+        {
+            var trip = await _context.Trips
+                .Include(t => t.Participants)
+                .FirstOrDefaultAsync(t => t.Id == id);
+            if (trip == null)
+            {
+                return NotFound();
+            }
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+            if (trip.OwnerId == userId)
+            {
+                return Forbid();
+            }
+
+            if (trip.Participants.Any(u => u.Id == userId))
+            {
+                TempData["Message"] = "You have already registered for this trip.";
+                return RedirectToAction(nameof(Details), new { id = trip.Id });
+            }
+
+            if (trip.Participants.Count >= trip.Capacity)
+            {
+                TempData["Message"] = "The trip is already full.";
+                return RedirectToAction(nameof(Details), new { id = trip.Id });
+            }
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            trip.Participants.Add(user);
+            await _context.SaveChangesAsync();
+            TempData["Message"] = "You have successfully registered for the trip.";
+            return RedirectToAction(nameof(Details), new { id = trip.Id });
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Leave(int id)
+        {
+            var trip = await _context.Trips
+                .Include(t => t.Participants)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (trip == null)
+            {
+                return NotFound();
+            }
+
+            var currentUserId = _userManager.GetUserId(User);
+            if (currentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var participant = trip.Participants.FirstOrDefault(p => p.Id == currentUserId);
+            if (participant == null)
+            {
+                TempData["Message"] = "You are not registered for this trip.";
+                return RedirectToAction(nameof(Details), new { id = trip.Id });
+            }
+
+            // Remove the user from the trip's participants.
+            trip.Participants.Remove(participant);
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = "You have successfully unregistered from the trip.";
+            return RedirectToAction(nameof(Details), new { id = trip.Id });
         }
     }
 }

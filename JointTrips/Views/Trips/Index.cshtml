@@ -2,15 +2,17 @@
 @using System.Security.Claims
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Joint Trips";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<h1>Joint Trips</h1>
+@if (User.Identity.IsAuthenticated)
+{
+    <p>
+        <a asp-action="Create">Create New</a>
+    </p>
+}
 <table class="table">
     <thead>
         <tr>
@@ -30,7 +32,7 @@
                 @Html.DisplayNameFor(model => model.Location)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Capacity)
+                Registered
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Owner)
@@ -57,7 +59,7 @@
                 @Html.DisplayFor(modelItem => item.Location)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Capacity)
+                @item.Participants.Count / @item.Capacity
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Owner.Name)
