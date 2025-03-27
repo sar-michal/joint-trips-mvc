@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace JointTrips.Models;
 
@@ -25,7 +26,7 @@ public class Trip
     [Column(TypeName = "decimal(19, 2)")]
     public decimal Price { get; set; }
 
-    [RegularExpression(@"^[\p{Lu}]+[\p{L}\s]*$")]
+    //[RegularExpression(@"^[\p{Lu}][\p{L}\s]*$", ErrorMessage = "Location must start with an uppercase letter followed by letters or spaces.")]
     [Required]
     [StringLength(30)]
     public string? Location { get; set; }
@@ -36,8 +37,8 @@ public class Trip
 
     [StringLength(2000)]
     public string? Description { get; set; } // Data
-
     public string OwnerId { get; set; } = string.Empty;
-    public virtual ApplicationUser? Owner { get; set; }
+    [ValidateNever]
+    public virtual ApplicationUser Owner { get; set; } = default!;
     public virtual ICollection<ApplicationUser> Participants { get; set; } = new List<ApplicationUser>();
 }

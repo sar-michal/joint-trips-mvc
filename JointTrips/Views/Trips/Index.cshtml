@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<JointTrips.Models.Trip>
+@using System.Security.Claims
 
 @{
     ViewData["Title"] = "Index";
@@ -32,9 +33,6 @@
                 @Html.DisplayNameFor(model => model.Capacity)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
                 @Html.DisplayNameFor(model => model.Owner)
             </th>
             <th></th>
@@ -62,16 +60,16 @@
                 @Html.DisplayFor(modelItem => item.Capacity)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Description)
+                @Html.DisplayFor(modelItem => item.Owner.Name)
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Owner.Id)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
+                <td>
+                    @if (item.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier))
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                        <a asp-action = "Delete" asp-route-id="@item.Id">Delete</a>
+                    }
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                </td>
         </tr>
 }
     </tbody>
