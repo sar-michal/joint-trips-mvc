@@ -37,6 +37,10 @@ public class Trip
 
     [StringLength(2000)]
     public string? Description { get; set; } // Data
+
+    [Timestamp]
+    public byte[] ConcurrencyToken { get; set; } = default!;
+
     [ValidateNever]
     public virtual ICollection<ApplicationUser> Owners { get; set; } = new List<ApplicationUser>();
     public virtual ICollection<ApplicationUser> Participants { get; set; } = new List<ApplicationUser>();
