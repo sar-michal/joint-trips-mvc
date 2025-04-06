@@ -50,7 +50,7 @@
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Owners)
         </dt>
-        <dd class="col-sm-10"></dd>
+        <dd class="col-sm-10">
             @foreach (var owner in Model.Owners)
             {
                 @($"{owner.Name} ({owner.Email})") <br />
