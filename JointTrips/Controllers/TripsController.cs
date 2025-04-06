@@ -25,7 +25,7 @@ namespace JointTrips.Controllers
         public async Task<IActionResult> Index()
         {
             var jointTripsContext = _context.Trips
-                .Include(t => t.Owner)
+                .Include(t => t.Owners)
                 .Include(t => t.Participants)
                 .Where(t => t.StartDate > DateTime.Now);
             return View(await jointTripsContext.ToListAsync());
@@ -40,7 +40,7 @@ namespace JointTrips.Controllers
             }
 
             var trip = await _context.Trips
-                .Include(t => t.Owner)
+                .Include(t => t.Owners)
                 .Include(t => t.Participants)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (trip == null)
@@ -71,12 +71,12 @@ namespace JointTrips.Controllers
         {
             if (ModelState.IsValid)
             {
-                var userId = _userManager.GetUserId(User);
-                if (userId == null)
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
                 {
                     return Unauthorized();
                 }
-                trip.OwnerId = userId;
+                trip.Owners.Add(user);
                 _context.Add(trip);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -97,7 +97,7 @@ namespace JointTrips.Controllers
             {
                 return NotFound();
             }
-            if (trip.OwnerId != _userManager.GetUserId(User))
+            if (!trip.Owners.Any(u => u.Id == _userManager.GetUserId(User)))
             {
                 return Forbid();
             }
@@ -130,11 +130,11 @@ namespace JointTrips.Controllers
                 return NotFound();
             }
 
-            if (originalTrip.OwnerId != _userManager.GetUserId(User))
+            if (!trip.Owners.Any(u => u.Id == _userManager.GetUserId(User)))
             {
                 return Forbid();
             }
-            trip.OwnerId = originalTrip.OwnerId;
+            trip.Owners = originalTrip.Owners;
 
             if (ModelState.IsValid)
             {
@@ -168,14 +168,14 @@ namespace JointTrips.Controllers
             }
 
             var trip = await _context.Trips
-                .Include(t => t.Owner)
+                .Include(t => t.Owners)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (trip == null)
             {
                 return NotFound();
             }
 
-            if (trip.OwnerId != _userManager.GetUserId(User))
+            if (!trip.Owners.Any(u => u.Id == _userManager.GetUserId(User)))
             {
                 return Forbid();
             }
@@ -192,7 +192,7 @@ namespace JointTrips.Controllers
             {
                 return NotFound();
             }
-            if (trip.OwnerId != _userManager.GetUserId(User))
+            if (!trip.Owners.Any(u => u.Id == _userManager.GetUserId(User)))
             {
                 return Forbid();
             }
@@ -222,7 +222,7 @@ namespace JointTrips.Controllers
             {
                 return Unauthorized();
             }
-            if (trip.OwnerId == userId)
+            if (!trip.Owners.Any(u => u.Id == _userManager.GetUserId(User)))
             {
                 return Forbid();
             }
@@ -290,7 +290,7 @@ namespace JointTrips.Controllers
             }
 
             var trip = await _context.Trips
-                .Include(t => t.Owner)
+                .Include(t => t.Owners)
                 .Include(t => t.Participants)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
@@ -300,12 +300,93 @@ namespace JointTrips.Controllers
             }
 
             var currentUserId = _userManager.GetUserId(User);
-            if (trip.OwnerId != currentUserId)
+            if (!trip.Owners.Any(u => u.Id == _userManager.GetUserId(User)))
             {
                 return Forbid();
             }
 
             return View(trip);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GrantOwnership(int tripId, string userId)
+        {
+            var trip = await _context.Trips
+                .Include(t => t.Owners)
+                .Include(t => t.Participants)
+                .FirstOrDefaultAsync(t => t.Id == tripId);
+            if(trip == null)
+            {
+                return NotFound();
+            }
+            var currentUserId = _userManager.GetUserId(User);
+            if (!trip.Owners.Any(u => u.Id == currentUserId))
+            {
+                return Forbid();
+            }
+            if(currentUserId == userId)
+            {
+                TempData["Message"] = "You cannot change your own ownership.";
+                return RedirectToAction(nameof(Participants), new { id = tripId });
+            }
+
+            var userToGrant = await _userManager.FindByIdAsync(userId);
+            if (userToGrant == null)
+            {
+                return NotFound();
+            }
+
+            if(!trip.Owners.Any(u => u.Id == userId))
+            {
+                trip.Owners.Add(userToGrant);
+                await _context.SaveChangesAsync();
+                TempData["Message"] = "Ownership granted.";
+            }
+            return RedirectToAction(nameof(Participants), new { id = tripId });
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RevokeOwnership(int tripId, string userId)
+        {
+            var trip = await _context.Trips
+                .Include(t => t.Owners)
+                .Include(t => t.Participants)
+                .FirstOrDefaultAsync(t => t.Id == tripId);
+            if(trip == null)
+            {
+                return NotFound();
+            }
+
+            var currentUserId = _userManager.GetUserId(User);
+            if (!trip.Owners.Any(u => u.Id == currentUserId))
+            {
+                return Forbid();
+            }
+
+            if(currentUserId == userId)
+            {
+                TempData["Message"] = "You cannot change your own ownership.";
+                return RedirectToAction(nameof(Participants), new { id = tripId });
+            }
+            if (trip.Owners.Count <= 1)
+            {
+                TempData["Message"] = "A trip must have at least one owner.";
+                return RedirectToAction(nameof(Participants), new { id = tripId });
+            }
+
+            var userToRevoke = await _userManager.FindByIdAsync(userId);
+            if (userToRevoke == null)
+            {
+                return NotFound();
+            }
+            
+            if(trip.Owners.Any(u => u.Id == userId))
+            {
+                trip.Owners.Remove(userToRevoke);
+                await _context.SaveChangesAsync();
+                TempData["Message"] = "Ownership revoked.";
+            }
+            return RedirectToAction(nameof(Participants), new { id = tripId });
         }
     }
 }
