@@ -77,6 +77,7 @@ namespace JointTrips.Controllers
                     return Unauthorized();
                 }
                 trip.Owners.Add(user);
+                trip.Participants.Add(user);
                 _context.Add(trip);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -87,12 +88,15 @@ namespace JointTrips.Controllers
         // GET: Trips/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+
             if (id == null)
             {
                 return NotFound();
             }
 
-            var trip = await _context.Trips.FindAsync(id);
+            var trip = await _context.Trips
+                .Include(t => t.Owners)
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (trip == null)
             {
                 return NotFound();
@@ -109,43 +113,45 @@ namespace JointTrips.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,StartDate,EndDate,Price,Location,Capacity,Description")] Trip trip)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,StartDate,EndDate,Price,Location,Capacity,Description")] Trip updatedTrip)
         {
-            if (id != trip.Id)
+            if (id != updatedTrip.Id)
             {
                 return NotFound();
             }
 
-            foreach (var state in ModelState.Values)
-            {
-                foreach (var error in state.Errors)
-                {
-                    Console.WriteLine(error.ErrorMessage);
-                }
-            }
+            var tripToUpdate = await _context.Trips
+                .Include(t => t.Owners)
+                .FirstOrDefaultAsync(t => t.Id == id);
 
-            var originalTrip = await _context.Trips.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id);
-            if (originalTrip == null)
+            if (tripToUpdate == null)
             {
                 return NotFound();
             }
 
-            if (!trip.Owners.Any(u => u.Id == _userManager.GetUserId(User)))
+            var currentUserId = _userManager.GetUserId(User);
+            if (!tripToUpdate.Owners.Any(u => u.Id == currentUserId))
             {
                 return Forbid();
             }
-            trip.Owners = originalTrip.Owners;
 
             if (ModelState.IsValid)
             {
+                tripToUpdate.Title = updatedTrip.Title;
+                tripToUpdate.StartDate = updatedTrip.StartDate;
+                tripToUpdate.EndDate = updatedTrip.EndDate;
+                tripToUpdate.Price = updatedTrip.Price;
+                tripToUpdate.Location = updatedTrip.Location;
+                tripToUpdate.Capacity = updatedTrip.Capacity;
+                tripToUpdate.Description = updatedTrip.Description;
+
                 try
                 {
-                    _context.Update(trip);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TripExists(trip.Id))
+                    if (!TripExists(updatedTrip.Id))
                     {
                         return NotFound();
                     }
@@ -156,7 +162,7 @@ namespace JointTrips.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(trip);
+            return View(updatedTrip);
         }
 
         // GET: Trips/Delete/5
@@ -187,7 +193,9 @@ namespace JointTrips.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var trip = await _context.Trips.FindAsync(id);
+            var trip = await _context.Trips
+                .Include(t => t.Owners)
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (trip == null)
             {
                 return NotFound();
@@ -212,6 +220,7 @@ namespace JointTrips.Controllers
         {
             var trip = await _context.Trips
                 .Include(t => t.Participants)
+                .Include(t => t.Owners)
                 .FirstOrDefaultAsync(t => t.Id == id);
             if (trip == null)
             {
@@ -222,7 +231,7 @@ namespace JointTrips.Controllers
             {
                 return Unauthorized();
             }
-            if (!trip.Owners.Any(u => u.Id == _userManager.GetUserId(User)))
+            if (trip.Owners.Any(u => u.Id == _userManager.GetUserId(User)))
             {
                 return Forbid();
             }
