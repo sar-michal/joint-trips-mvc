@@ -46,7 +46,8 @@ public static class SeedData
                     Price = 300.00M,
                     Location = "Tokyo",
                     Capacity = 20,
-                    OwnerId = defaultUser.Id
+                    Description = "Enjoy a tour through Tokyo's highlights.",
+                    Owners = new List<ApplicationUser> { defaultUser }
                 },
                 new Trip
                 {
@@ -56,7 +57,8 @@ public static class SeedData
                     Price = 50.00M,
                     Location = "Tatra Mountains",
                     Capacity = 10,
-                    OwnerId = defaultUser.Id
+                    Description = "A challenging hike through the Tatra Mountains.",
+                    Owners = new List<ApplicationUser> { defaultUser }
                 },
                 new Trip
                 {
@@ -66,7 +68,8 @@ public static class SeedData
                     Price = 20.00M,
                     Location = "Sierra National Forest",
                     Capacity = 8,
-                    OwnerId = defaultUser.Id
+                    Description = "Spend a few nights under the stars.",
+                    Owners = new List<ApplicationUser> { defaultUser }
                 },
                 new Trip
                 {
@@ -76,7 +79,8 @@ public static class SeedData
                     Price = 0.00M,
                     Location = "Warsaw",
                     Capacity = 7,
-                    OwnerId = defaultUser.Id
+                    Description = "A relaxing walk through historic Warsaw.",
+                    Owners = new List<ApplicationUser> { defaultUser }
                 }
             );
             context.SaveChanges();

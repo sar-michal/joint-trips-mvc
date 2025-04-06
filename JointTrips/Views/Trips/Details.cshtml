@@ -48,10 +48,13 @@
             @Model.Participants.Count / @Model.Capacity
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Owner)
+            @Html.DisplayNameFor(model => model.Owners)
         </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Owner.Name) (@Html.DisplayFor(model => model.Owner.Email))
+        <dd class="col-sm-10"></dd>
+            @foreach (var owner in Model.Owners)
+            {
+                @($"{owner.Name} ({owner.Email})") <br />
+            }
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Description)
@@ -65,11 +68,11 @@
     <a asp-action="Index">Back to List</a>
     @{
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        bool isOwner = Model.OwnerId == currentUserId;
+        bool isOwner = Model.Owners.Any(u => u.Id == currentUserId);
         bool isRegistered = Model.Participants.Any(p => p.Id == currentUserId);
     }
 
-    @if (User.Identity.IsAuthenticated)
+    @if (User?.Identity?.IsAuthenticated == true)
     {
         if (!isOwner)
         {

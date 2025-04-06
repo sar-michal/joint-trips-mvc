@@ -49,10 +49,13 @@
             @Html.DisplayFor(model => model.Capacity)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Owner)
+            @Html.DisplayNameFor(model => model.Owners)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Owner.Name)
+            @foreach (var owner in Model.Owners)
+            {
+                @($"{owner.Name} ({owner.Email})") <br />
+            }
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Description)
