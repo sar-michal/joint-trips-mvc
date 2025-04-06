@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JointTrips.Migrations
 {
     [DbContext(typeof(JointTripsContext))]
-    [Migration("20250327101353_Req2")]
-    partial class Req2
+    [Migration("20250406124956_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,21 @@ namespace JointTrips.Migrations
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("ApplicationUserTrip", b =>
+                {
+                    b.Property<int>("OwnedTripsId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OwnersId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("OwnedTripsId", "OwnersId");
+
+                    b.HasIndex("OwnersId");
+
+                    b.ToTable("TripOwners", (string)null);
+                });
+
+            modelBuilder.Entity("ApplicationUserTrip1", b =>
                 {
                     b.Property<string>("ParticipantsId")
                         .HasColumnType("nvarchar(450)");
@@ -132,10 +147,6 @@ namespace JointTrips.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<string>("OwnerId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(19, 2)");
 
@@ -148,8 +159,6 @@ namespace JointTrips.Migrations
                         .HasColumnType("nvarchar(60)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("OwnerId");
 
                     b.ToTable("Trips");
                 });
@@ -289,6 +298,21 @@ namespace JointTrips.Migrations
 
             modelBuilder.Entity("ApplicationUserTrip", b =>
                 {
+                    b.HasOne("JointTrips.Models.Trip", null)
+                        .WithMany()
+                        .HasForeignKey("OwnedTripsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JointTrips.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("OwnersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ApplicationUserTrip1", b =>
+                {
                     b.HasOne("JointTrips.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("ParticipantsId")
@@ -300,17 +324,6 @@ namespace JointTrips.Migrations
                         .HasForeignKey("TripsSignedUpId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("JointTrips.Models.Trip", b =>
-                {
-                    b.HasOne("JointTrips.Models.ApplicationUser", "Owner")
-                        .WithMany("OwnedTrips")
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -362,11 +375,6 @@ namespace JointTrips.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("JointTrips.Models.ApplicationUser", b =>
-                {
-                    b.Navigation("OwnedTrips");
                 });
 #pragma warning restore 612, 618
         }
