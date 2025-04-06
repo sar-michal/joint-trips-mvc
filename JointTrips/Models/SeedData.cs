@@ -8,8 +8,7 @@ public static class SeedData
     public static void Initialize(IServiceProvider serviceProvider)
     {
         using (var context = new JointTripsContext(
-            serviceProvider.GetRequiredService<
-                DbContextOptions<JointTripsContext>>()))
+            serviceProvider.GetRequiredService<DbContextOptions<JointTripsContext>>()))
         {
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             string defaultEmail = "John@jointtrips.com";
@@ -32,6 +31,10 @@ public static class SeedData
                     throw new Exception("Failed to create default user.");
                 }
             }
+            if (!context.Set<ApplicationUser>().Local.Any(u => u.Id == defaultUser.Id))
+            {
+                context.Attach(defaultUser);
+            }
             // Look for any trips.
             if (context.Trips.Any())
             {
@@ -47,7 +50,8 @@ public static class SeedData
                     Location = "Tokyo",
                     Capacity = 20,
                     Description = "Enjoy a tour through Tokyo's highlights.",
-                    Owners = new List<ApplicationUser> { defaultUser }
+                    Owners = new List<ApplicationUser> { defaultUser },
+                    Participants = new List<ApplicationUser> { defaultUser }
                 },
                 new Trip
                 {
@@ -58,7 +62,8 @@ public static class SeedData
                     Location = "Tatra Mountains",
                     Capacity = 10,
                     Description = "A challenging hike through the Tatra Mountains.",
-                    Owners = new List<ApplicationUser> { defaultUser }
+                    Owners = new List<ApplicationUser> { defaultUser },
+                    Participants = new List<ApplicationUser> { defaultUser }
                 },
                 new Trip
                 {
@@ -69,7 +74,8 @@ public static class SeedData
                     Location = "Sierra National Forest",
                     Capacity = 8,
                     Description = "Spend a few nights under the stars.",
-                    Owners = new List<ApplicationUser> { defaultUser }
+                    Owners = new List<ApplicationUser> { defaultUser },
+                    Participants = new List<ApplicationUser> { defaultUser }
                 },
                 new Trip
                 {
@@ -80,7 +86,8 @@ public static class SeedData
                     Location = "Warsaw",
                     Capacity = 7,
                     Description = "A relaxing walk through historic Warsaw.",
-                    Owners = new List<ApplicationUser> { defaultUser }
+                    Owners = new List<ApplicationUser> { defaultUser },
+                    Participants = new List<ApplicationUser> { defaultUser }
                 }
             );
             context.SaveChanges();
