@@ -37,8 +37,7 @@ public class Trip
 
     [StringLength(2000)]
     public string? Description { get; set; } // Data
-    public string OwnerId { get; set; } = string.Empty;
     [ValidateNever]
-    public virtual ApplicationUser Owner { get; set; } = default!;
+    public virtual ICollection<ApplicationUser> Owners { get; set; } = new List<ApplicationUser>();
     public virtual ICollection<ApplicationUser> Participants { get; set; } = new List<ApplicationUser>();
 }

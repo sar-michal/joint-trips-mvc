@@ -16,12 +16,12 @@ public class JointTripsContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(modelBuilder);
 
-        // one-to-many relationship between User (Owner) and Trip
+        // many-to-many relationship for trip Owners
         modelBuilder.Entity<Trip>()
-            .HasOne(t => t.Owner)
+            .HasMany(t => t.Owners)
             .WithMany(u => u.OwnedTrips)
-            .HasForeignKey(t => t.OwnerId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .UsingEntity(joinEntity => joinEntity.ToTable("TripOwners"));
+
         // many-to-many relationship for Trip participants
         modelBuilder.Entity<Trip>()
             .HasMany(t => t.Participants)
