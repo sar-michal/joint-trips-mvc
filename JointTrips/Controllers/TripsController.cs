@@ -259,7 +259,7 @@ namespace JointTrips.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> join(int id)
+        public async Task<IActionResult> join(int id, byte[] ConcurrencyToken)
         {
             var trip = await _context.Trips
                 .Include(t => t.Participants)
@@ -295,9 +295,25 @@ namespace JointTrips.Controllers
             {
                 return Unauthorized();
             }
-            trip.Participants.Add(user);
-            await _context.SaveChangesAsync();
-            TempData["Message"] = "You have successfully registered for the trip.";
+            try
+            {
+                _context.Entry(trip).Property(t => t.ConcurrencyToken).OriginalValue = ConcurrencyToken;
+            }
+            catch (Exception)
+            {
+                TempData["Message"] = "Invalid concurrency token.";
+                return RedirectToAction(nameof(Details), new { id = trip.Id });
+            }
+            try
+            {
+                trip.Participants.Add(user);
+                await _context.SaveChangesAsync();
+                TempData["Message"] = "You have successfully registered for the trip.";
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                TempData["Message"] = "The trip was updated by another user. Please refresh and try again.";
+            }
             return RedirectToAction(nameof(Details), new { id = trip.Id });
         }
         [HttpPost]

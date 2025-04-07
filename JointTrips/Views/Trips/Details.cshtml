@@ -91,6 +91,7 @@
                     <form asp-action="Join" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" asp-for="ConcurrencyToken" />
                         <input type="submit" value="Join Trip" class="btn btn-primary" />
                     </form>
                 }
