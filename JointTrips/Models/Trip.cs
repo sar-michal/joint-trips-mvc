@@ -38,6 +38,7 @@ public class Trip
     [StringLength(2000)]
     public string? Description { get; set; } // Data
 
+    [ValidateNever]
     [Timestamp]
     public byte[] ConcurrencyToken { get; set; } = default!;
 

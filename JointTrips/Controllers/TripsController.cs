@@ -113,7 +113,7 @@ namespace JointTrips.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,StartDate,EndDate,Price,Location,Capacity,Description")] Trip updatedTrip)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,StartDate,EndDate,Price,Location,Capacity,Description,ConcurrencyToken")] Trip updatedTrip)
         {
             if (id != updatedTrip.Id)
             {
@@ -134,6 +134,7 @@ namespace JointTrips.Controllers
             {
                 return Forbid();
             }
+            _context.Entry(tripToUpdate).Property(t => t.ConcurrencyToken).OriginalValue = updatedTrip.ConcurrencyToken;
 
             if (ModelState.IsValid)
             {
@@ -148,19 +149,61 @@ namespace JointTrips.Controllers
                 try
                 {
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
-                    if (!TripExists(updatedTrip.Id))
+                    var exceptionEntry = ex.Entries.Single();
+                    var clientValues = (Trip)exceptionEntry.Entity;
+                    var databaseEntry = exceptionEntry.GetDatabaseValues();
+                    if (databaseEntry == null)
                     {
-                        return NotFound();
+                        ModelState.AddModelError(string.Empty,
+                            "Unable to save changes. The Trip was deleted by another user.");
                     }
                     else
                     {
-                        throw;
+                        var databaseValues = (Trip)databaseEntry.ToObject();
+
+                        if (databaseValues.Title != clientValues.Title)
+                        {
+                            ModelState.AddModelError("Title", $"Current value: {databaseValues.Title}");
+                        }
+                        if (databaseValues.StartDate != clientValues.StartDate)
+                        {
+                            ModelState.AddModelError("StartDate", $"Current value: {databaseValues.StartDate:d}");
+                        }
+                        if (databaseValues.EndDate!= clientValues.EndDate)
+                        {
+                            ModelState.AddModelError("EndDate", $"Current value: {databaseValues.EndDate:d}");
+                        }
+                        if (databaseValues.Price != clientValues.Price)
+                        {
+                            ModelState.AddModelError("Price", $"Current value: {databaseValues.Price:c}");
+                        }
+                        if (databaseValues.Location != clientValues.Location)
+                        {
+                            ModelState.AddModelError("Location", $"Current value: {databaseValues.Location}");
+                        }
+                        if (databaseValues.Capacity != clientValues.Capacity)
+                        {
+                            ModelState.AddModelError("Capacity", $"Current value: {databaseValues.Capacity}");
+                        }
+                        if (databaseValues.Description != clientValues.Description)
+                        {
+                            ModelState.AddModelError("Description", $"Current value: {databaseValues.Description}");
+                        }
+
+                        ModelState.AddModelError(string.Empty, "The record you attempted to edit "
+                                + "was modified by another user after you got the original value. The "
+                                + "edit operation was canceled and the current values in the database "
+                                + "have been displayed. If you still want to edit this record, click "
+                                + "the Save button again. Otherwise click the Back to List hyperlink.");
+                        tripToUpdate.ConcurrencyToken = (byte[])databaseValues.ConcurrencyToken;
+                        ModelState.Remove("ConcurrencyToken");
                     }
+                    return View(tripToUpdate);
                 }
-                return RedirectToAction(nameof(Index));
             }
             return View(updatedTrip);
         }
