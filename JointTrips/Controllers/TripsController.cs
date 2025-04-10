@@ -284,7 +284,6 @@ namespace JointTrips.Controllers
                 TempData["Message"] = "You have already registered for this trip.";
                 return RedirectToAction(nameof(Details), new { id = trip.Id });
             }
-
             if (trip.Participants.Count >= trip.Capacity)
             {
                 TempData["Message"] = "The trip is already full.";
@@ -307,6 +306,7 @@ namespace JointTrips.Controllers
             try
             {
                 trip.Participants.Add(user);
+                _context.Entry(trip).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
                 TempData["Message"] = "You have successfully registered for the trip.";
             }
