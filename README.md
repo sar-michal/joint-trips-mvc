@@ -94,12 +94,20 @@ This project implements optimistic concurrency for editing trips. Each Trip enti
 
 ## Screenshots
 
-**Login**
+### Login
+![Login](https://github.com/user-attachments/assets/fb936c76-7952-4898-95e7-c2dac0fb1324)
 
-**Trips**
+### Trips
+![Trips](https://github.com/user-attachments/assets/6d6942e0-78a9-49da-96f0-88afcd9d34ef)
 
-**Details**
+### Details
+![Details](https://github.com/user-attachments/assets/26fa7837-876d-41ef-bdc1-03f0d3f9a197)
 
-**Participants**
+### Join
+![Join](https://github.com/user-attachments/assets/39452dd2-e485-47cf-9b19-fa89382e3ed2)
 
-**Concurrency Edit**
+### Participants
+![Participants](https://github.com/user-attachments/assets/bb6f2b07-322b-47fc-844b-143ee1aeaf3c)
+
+### Concurrency Edit
+![Edit_Concurrency](https://github.com/user-attachments/assets/6bfffd91-1ed4-4bef-b988-a89d6d9c4f69)
